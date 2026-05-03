@@ -30,7 +30,17 @@ from plain English commands using LLM tool use.
 
 ## Phase 2: Core Tool Functions
 **Aim:** Build all OS-level tools the agent will use
-**Status:** ⏳ In Progress
+**Status:** ✅ Complete
+**What I did:**
+- Implemented file system tools: `read_file`, `write_file`, `list_files`, and `create_folder` with robust error handling.
+- Added system automation tool: `run_command` with a 15s timeout and safety filters for dangerous operations.
+- Integrated web search capability: `search_web` using the DuckDuckGo search API.
+- Created `TOOL_DEFINITIONS` and `AVAILABLE_FUNCTIONS` for seamless LLM integration.
+- Developed an integrated test suite within `tools.py` to verify all tool functionality.
+**What I learned:**
+- Implementing idempotent file operations and handling cross-platform encoding issues (UTF-8).
+- Designing safety-first shell command execution with command blacklisting.
+- Structuring OpenAI-style tool definitions for function calling.
 
 ---
 

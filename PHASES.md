@@ -61,7 +61,16 @@ from plain English commands using LLM tool use.
 
 ## Phase 4: CLI Interface
 **Aim:** Build clean terminal interface for user interaction
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
+**What I did:**
+- Developed a professional CLI entry point in `main.py` using the Click library.
+- Created an interactive REPL with custom command prompts and thinking indicators.
+- Implemented special session commands: `clear` (reset history), `history` (view message count), and `exit`.
+- Integrated graceful signal handling (KeyboardInterrupt) and global error catching to ensure zero-crash operations.
+**What I learned:**
+- Building robust interactive CLI loops in Python.
+- Separating UI concerns from the core agent logic for better maintainability.
+- Enhancing user experience with status indicators and clear system messages.
 
 ---
 
@@ -80,4 +89,12 @@ from plain English commands using LLM tool use.
 
 ## Phase 6: Docker + README
 **Aim:** Containerize and document the project
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
+**What I did:**
+- Created a production-ready `Dockerfile` based on `python:3.11-slim`.
+- Configured `docker-compose.yml` for easy multi-container management and persistent volume mapping for logs.
+- Wrote a comprehensive `README.md` covering installation, features, tech stack, and security protocols.
+**What I learned:**
+- Containerizing interactive CLI applications with proper TTY and STDIN handling.
+- Documentation best practices for open-source AI projects.
+- Managing environment variables and log persistence across container boundaries.

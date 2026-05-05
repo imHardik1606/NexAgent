@@ -1,0 +1,10 @@
+services:
+  nexagent:
+    build: .
+    container_name: nexagent
+    volumes:
+      - ./logs:/app/logs
+    env_file:
+      - .env
+    stdin_open: true # Equivalent to -i
+    tty: true        # Equivalent to -t

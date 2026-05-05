@@ -46,7 +46,16 @@ from plain English commands using LLM tool use.
 
 ## Phase 3: Agent Logic
 **Aim:** Build the brain that connects LLM to tools
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
+**What I did:**
+- Developed the `Agent` class in `agent.py` using the Groq SDK for high-speed inference.
+- Implemented recursive tool-calling logic that enables the LLM to execute local functions.
+- Designed a persistent conversation history system for multi-turn interactions.
+- Added error handling and truncation logic for tool outputs to maintain token efficiency and clean logs.
+**What I learned:**
+- Managing state in conversational AI using a structured message history.
+- Handling the two-step completion cycle required for OpenAI-style function calling.
+- Debugging complex LLM-to-tool integration flows and parsing dynamic arguments.
 
 ---
 
@@ -58,7 +67,14 @@ from plain English commands using LLM tool use.
 
 ## Phase 5: Logging System
 **Aim:** Add production-grade logging to every operation
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
+**What I did:**
+- Built a centralized `logger.py` module with both `FileHandler` and `StreamHandler`.
+- Configured automated directory creation for `logs/` and UTF-8 encoding support for cross-platform emojis.
+- Integrated logging throughout the Agent's lifecycle, including user inputs, tool calls, and final responses.
+**What I learned:**
+- Best practices for structuring logs in a production AI application.
+- Managing encoding challenges when logging unicode characters (emojis) in Windows environments.
 
 ---
 

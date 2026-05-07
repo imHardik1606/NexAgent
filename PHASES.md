@@ -90,14 +90,16 @@ from plain English commands using LLM tool use.
 
 ---
 
-## Phase 6: Docker + README
-**Aim:** Containerize and document the project
+## Phase 6: Dockerization & Documentation
+**Aim:** Containerize the application and finalize documentation
 **Status:** ✅ Complete
 **What I did:**
-- Created a production-ready `Dockerfile` based on `python:3.11-slim`.
-- Configured `docker-compose.yml` for easy multi-container management and persistent volume mapping for logs.
-- Wrote a comprehensive `README.md` covering installation, features, tech stack, and security protocols.
+- Created an optimized `Dockerfile` using `python:3.11-slim` with layer caching for dependencies.
+- Implemented a `.dockerignore` file to keep the image slim and secure (excluding `.env`, `logs/`, etc.).
+- Configured the container to handle interactive CLI input via TTY support.
+- Wrote a comprehensive `README.md` with clear build and run instructions using `--env-file`.
+- Configured `docker-compose.yml` for simplified deployment and volume mapping.
 **What I learned:**
-- Containerizing interactive CLI applications with proper TTY and STDIN handling.
-- Documentation best practices for open-source AI projects.
-- Managing environment variables and log persistence across container boundaries.
+- Optimizing Docker images for Python applications using slim bases and layer caching.
+- Securely passing secrets to containers using environment files instead of baking them in.
+- Managing persistent storage for logs across container restarts using Docker volumes.

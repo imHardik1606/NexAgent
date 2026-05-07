@@ -1,84 +1,103 @@
 # NexAgent — AI-Powered OS Assistant
 
-NexAgent is a CLI-based AI agent that executes real OS-level actions from plain English commands. It uses the Groq API (Llama 3.1) to interpret user intent and execute local tools for file management, system commands, and web searches.
+NexAgent is a CLI-based AI agent that bridges natural language and OS-level execution. By leveraging Llama 3.1 via the Groq API, it interprets complex user intent and safely executes local file system operations, shell commands, and web searches.
 
-## 🚀 Features
-- **Natural Language OS Control**: "Create a folder named backups", "Read the log file", etc.
-- **Web Intelligence**: Integrated search capabilities to answer real-time questions.
-- **Secure Command Execution**: Built-in safety filters to block dangerous shell commands.
-- **Persistent Logging**: Centralized logging system with UTF-8 support for emojis.
-- **Recursive Reasoning**: Handles complex tasks by automatically chaining multiple tool calls.
+## 🧠 Why I Built This
+I built NexAgent to explore the transition from traditional CLIs to **AI-native operating environments**. Instead of memorizing syntax, users interact with their system through high-level intent. This project demonstrates how an LLM can act as a reasoning engine for an OS, chaining multiple tools to solve non-trivial automation tasks while maintaining safety and auditability.
+
+## ✨ Features
+NexAgent is equipped with six core tools that enable it to manage your environment:
+- **`list_files`**: Recursively explore directory structures.
+- **`read_file`**: Extract content from local files for context or analysis.
+- **`write_file`**: Generate or update documents, scripts, or logs.
+- **`create_folder`**: Organize project structures on the fly.
+- **`run_command`**: Execute arbitrary shell commands (with safety filtering).
+- **`search_web`**: Retrieve real-time information from the internet via DuckDuckGo.
 
 ## 🛠 Tech Stack
-- **Core**: Python 3.11
-- **LLM**: Groq (Llama 3.1 8B Instant)
-- **Tools**: Click (CLI), DuckDuckGo Search (Web)
-- **Deployment**: Docker & Docker Compose
+| Technology | Purpose |
+| :--- | :--- |
+| **Python 3.11** | Core logic and tool implementation |
+| **Groq (Llama 3.1 8B)** | High-speed LLM reasoning and function calling |
+| **Click** | Robust CLI argument parsing and interactive REPL |
+| **Docker** | Containerization for consistent environments |
+| **DuckDuckGo API** | Live web search integration |
+| **Logging** | Production-grade UTF-8 session tracking |
 
-## 📦 Setup & Installation
+## 🏗 Project Architecture
+```text
+      +-------------+        +-------------+        +-----------------+
+      |    User     | <----> |     CLI     | <----> |      Agent      |
+      | (English)   |        |  (main.py)  |        |    (agent.py)   |
+      +-------------+        +-------------+        +--------+--------+
+                                                             |
+                                           +-----------------+-----------------+
+                                           |                                   |
+                                   +-------v-------+                   +-------v-------+
+                                   |  LLM (Groq)   |                   |  Local Tools  |
+                                   | (Reasoning)   |                   |  (tools.py)   |
+                                   +---------------+                   +---------------+
+```
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Python 3.11+
-- Groq API Key (Get one at [console.groq.com](https://console.groq.com/))
+- **Python 3.11+**
+- **Groq API Key**: Obtain one from the [Groq Console](https://console.groq.com/).
 
-### Local Installation
-1. **Clone the repository:**
+### Installation
+1. **Clone the repository**:
    ```bash
-   git clone <repo-url>
+   git clone https://github.com/imHardik1606/NexAgent.git
    cd NexAgent
    ```
-
-2. **Create a virtual environment:**
+2. **Setup environment**:
    ```bash
    python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
+   source .venv/bin/activate  # Windows: .venv\Scripts\activate
    pip install -r requirements.txt
    ```
-
-4. **Configure environment:**
-   Create a `.env` file in the root directory:
+3. **Configure API Key**:
+   Create a `.env` file in the root:
    ```env
-   GROQ_API_KEY=your_actual_key_here
+   GROQ_API_KEY=your_key_here
    ```
 
-5. **Run the agent:**
-   ```bash
-   python main.py
-   ```
+### Running Locally
+```bash
+python main.py
+```
 
 ### Running with Docker
-1. **Build and start:**
-   ```bash
-   docker-compose up --build
-   ```
-2. **Attach to the interactive session:**
-   ```bash
-   docker attach nexagent
-   ```
+```bash
+# Build the image
+docker build -t nexagent .
 
-## 🎮 Usage
-Once started, you can talk to NexAgent in plain English:
-- `list the files in current directory`
-- `create a new folder called project_data`
-- `who won the F1 race last weekend?`
-- `write 'System initialized' to status.log`
+# Run interactively with your .env
+docker run -it --env-file .env nexagent
+```
 
-### Special Commands
-- `clear`: Resets the conversation history.
-- `history`: Shows the number of messages in current context.
-- `exit`: Safely ends the session.
+## 🎮 Example Interactions
+- **File Management**: `Create a folder called 'src' and inside it create 'app.py' with a hello world print.`
+- **System Intel**: `How many files are in the current directory and what is their total size?`
+- **Web-to-Local**: `Search for the latest Python release version and write it to VERSION.txt.`
+- **Command execution**: `List the active network connections using a system command.`
 
 ## 📁 Project Structure
-- `main.py`: CLI entry point.
-- `agent.py`: Core agent logic and LLM orchestration.
-- `tools.py`: OS and Web tool definitions.
-- `logger.py`: Centralized logging configuration.
-- `config.py`: Configuration and environment management.
-- `logs/`: Directory for persistent log files.
+```text
+NexAgent/
+├── agent.py          # LLM orchestration and tool calling logic
+├── main.py           # CLI entry point and interactive loop
+├── tools.py          # OS and Web tool implementations
+├── logger.py         # Session logging and formatting
+├── config.py         # Environment and global configuration
+├── requirements.txt  # Project dependencies
+├── Dockerfile        # Container configuration
+└── PHASES.md         # Detailed development roadmap
+```
 
-## 🛡 Security
-NexAgent includes a `run_command` filter that blocks high-risk operations (e.g., `rm -rf /`, `shutdown`). Always review the logs in `logs/agent.log` for a full audit trail of executed commands.
+## 💡 What I Learned
+1. **The Function Calling Paradox**: I learned that LLMs are excellent at choosing tools but require strict output schemas. Implementing recursive tool loops taught me how to handle multi-step reasoning where the output of one tool serves as the input for the next.
+2. **Safety as a First-Class Citizen**: Building the `run_command` tool required a "deny-list" approach to prevent destructive actions (like `rm -rf /`). I realized that an AI-native OS is only as good as its security sandbox.
+3. **Interactive UI in CLI**: Integrating `Click` with an LLM-driven REPL highlighted the importance of user feedback (like "Thinking..." indicators) to manage the latency of remote inference calls.
+4. **State Persistence**: Managing conversation history while preventing token overflow taught me how to balance context retention with API efficiency.

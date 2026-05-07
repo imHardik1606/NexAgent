@@ -1,7 +1,7 @@
 import click
 import sys
 from agent import Agent
-from logger import logger
+from logger import logger, log_session_start, log_session_end
 
 @click.command()
 def main():
@@ -26,7 +26,10 @@ def main():
         click.echo(f"Error initializing Agent. Please check your .env and config. ({e})")
         return
 
-    # 3. Interactive loop
+    # 3. Start session logging
+    log_session_start()
+
+    # 4. Interactive loop
     while True:
         try:
             # a/b. Get user input and strip whitespace
@@ -39,7 +42,7 @@ def main():
             # d. Handle 'exit'
             if user_input.lower() == 'exit':
                 click.echo("Goodbye!")
-                logger.info("Session ended by user.")
+                log_session_end(agent.get_interaction_count())
                 sys.exit(0)
             
             # e. Handle 'clear'
@@ -61,6 +64,7 @@ def main():
         except KeyboardInterrupt:
             # h. Wrap in try/except KeyboardInterrupt
             click.echo("\nGoodbye!")
+            log_session_end(agent.get_interaction_count())
             sys.exit(0)
         
         except Exception as e:

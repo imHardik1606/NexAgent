@@ -16,6 +16,7 @@ class Agent:
                 "content": "You are NexAgent, a helpful AI assistant with tools to interact with the filesystem and internet. When asked to do something requiring a tool, use it. Be concise. Always confirm what action you took."
             }
         ]
+        self.interaction_count = 0
         logger.info("Agent initialized")
 
     def run(self, user_input: str) -> str:
@@ -89,6 +90,7 @@ class Agent:
                 self.history.append({"role": "assistant", "content": final_content})
                 logger.info(f"Final Response: {final_content}")
                 
+                self.interaction_count += 1
                 return final_content
             
             else:
@@ -96,11 +98,16 @@ class Agent:
                 content = message.content
                 self.history.append({"role": "assistant", "content": content})
                 logger.info(f"Assistant Response: {content}")
+                self.interaction_count += 1
                 return content
 
         except Exception as e:
             logger.error(f"Error in Agent.run: {str(e)}")
             return "Sorry, I encountered an error. Please try again."
+
+    def get_interaction_count(self) -> int:
+        """Returns the total number of successful interactions."""
+        return self.interaction_count
 
     def clear_history(self):
         """

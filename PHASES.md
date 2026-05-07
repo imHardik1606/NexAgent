@@ -74,16 +74,19 @@ from plain English commands using LLM tool use.
 
 ---
 
-## Phase 5: Logging System
-**Aim:** Add production-grade logging to every operation
+## Phase 5: Enhanced Logging
+**Aim:** Add production-grade logging and session tracking
 **Status:** ✅ Complete
 **What I did:**
 - Built a centralized `logger.py` module with both `FileHandler` and `StreamHandler`.
-- Configured automated directory creation for `logs/` and UTF-8 encoding support for cross-platform emojis.
-- Integrated logging throughout the Agent's lifecycle, including user inputs, tool calls, and final responses.
+- Configured automated directory creation for `logs/` and UTF-8 encoding support.
+- Integrated logging throughout the Agent's lifecycle (inputs, tool calls, and responses).
+- **NEW:** Implemented `log_session_start` and `log_session_end` for visual session separation.
+- **NEW:** Added an interaction counter to track and log total user-agent exchanges per session.
 **What I learned:**
 - Best practices for structuring logs in a production AI application.
-- Managing encoding challenges when logging unicode characters (emojis) in Windows environments.
+- Managing session state and lifecycle events in a CLI environment.
+- Using visual dividers and interaction metrics to improve log readability and auditability.
 
 ---
 

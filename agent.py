@@ -13,7 +13,19 @@ class Agent:
         self.history = [
             {
                 "role": "system",
-                "content": f"You are NexAgent, a helpful AI assistant with tools to interact with the filesystem and internet. Your base user directory is {BASE_PATH}. When users mention 'Desktop', 'Documents', or relative paths, refer to this base directory. When asked to do something requiring a tool, use it. Be concise. Always confirm what action you took."
+                "content": (
+                    "You are NexAgent, a professional and high-end AI assistant. "
+                    f"Your base user directory is {BASE_PATH}. "
+                    "You have access to tools for filesystem operations and web searching. "
+                    "GUIDELINES:\n"
+                    "1. Always identify yourself clearly as NexAgent.\n"
+                    "2. Use tools whenever needed to provide accurate info.\n"
+                    "3. If a tool result is empty or technical (like raw shell output), summarize it in clean English. If info is missing, try a different search query or tool.\n"
+                    "4. If 'wttr.in' is down, try searching the web for 'current weather in [location]'.\n"
+                    "5. Avoid technical shorthand like 'km/h' if it looks messy; use 'km per hour' or 'mph'.\n"
+                    "6. DO NOT hallucinate tool calls or use XML-like tags.\n"
+                    "7. Be concise and confirm your actions professionally."
+                )
             }
         ]
         self.interaction_count = 0
@@ -21,91 +33,65 @@ class Agent:
 
     def run(self, user_input: str) -> str:
         """
-        Handles one full interaction cycle with the user, including tool execution if needed.
+        Handles the interaction cycle, supporting multiple tool calls in sequence.
         """
         try:
-            # Step 1: Append user message to history
             self.history.append({"role": "user", "content": user_input})
-            
-            # Step 2: Log user input
-            logger.info(f"User Input: {user_input}")
+            logger.debug(f"User Input: {user_input}")
 
-            # Step 3: First LLM call with tools
-            response = self.client.chat.completions.create(
-                model=MODEL_NAME,
-                messages=self.history,
-                tools=TOOL_DEFINITIONS,
-                tool_choice="auto",
-                temperature=TEMPERATURE
-            )
+            # Support up to 5 turns of tool usage per interaction
+            for turn in range(5):
+                response = self.client.chat.completions.create(
+                    model=MODEL_NAME,
+                    messages=self.history,
+                    tools=TOOL_DEFINITIONS,
+                    tool_choice="auto",
+                    temperature=TEMPERATURE
+                )
 
-            # Step 4: Get message from response
-            message = response.choices[0].message
-            
-            # Step 5: Check if tool_calls exist
-            if message.tool_calls:
-                # Append the assistant's tool-call message to history
-                self.history.append(message)
+                message = response.choices[0].message
                 
-                # Loop through each tool call
+                # If no tool calls, this is the final answer
+                if not message.tool_calls:
+                    self.history.append({"role": "assistant", "content": message.content})
+                    self.interaction_count += 1
+                    return message.content
+
+                # Process tool calls
+                self.history.append(message)
                 for tool_call in message.tool_calls:
                     function_name = tool_call.function.name
-                    
-                    # Parse arguments
                     try:
                         arguments = json.loads(tool_call.function.arguments)
                     except Exception:
                         arguments = {}
                     
-                    # Log tool call
-                    logger.info(f"Tool called: {function_name} | args: {arguments}")
+                    logger.debug(f"Tool called: {function_name} | args: {arguments}")
                     
-                    # Look up function in AVAILABLE_FUNCTIONS
                     function_to_call = AVAILABLE_FUNCTIONS.get(function_name)
                     if function_to_call:
                         result = function_to_call(**arguments)
                     else:
                         result = "Error: Tool not found"
                     
-                    # Log the result (first 150 chars only)
-                    logger.info(f"Tool Result: {str(result)[:150]}...")
+                    logger.debug(f"Tool Result: {str(result)[:150]}...")
                     
-                    # Append tool result to history
                     self.history.append({
                         "role": "tool",
                         "tool_call_id": tool_call.id,
                         "content": str(result)
                     })
                 
-                # Make second LLM call with updated history (no tools parameter)
-                second_response = self.client.chat.completions.create(
-                    model=MODEL_NAME,
-                    messages=self.history,
-                    temperature=TEMPERATURE
-                )
-                
-                final_content = second_response.choices[0].message.content
-                
-                # Append assistant message to history and log it
-                self.history.append({"role": "assistant", "content": final_content})
-                logger.info(f"Final Response: {final_content}")
-                
-                self.interaction_count += 1
-                return final_content
-            
-            else:
-                # No tool calls: Get content, append to history, log and return
-                content = message.content
-                self.history.append({"role": "assistant", "content": content})
-                logger.info(f"Assistant Response: {content}")
-                self.interaction_count += 1
-                return content
+                # Loop continues to give the model a chance to react to the tool results
+
+            return "Error: Maximum tool interaction turns exceeded."
 
         except Exception as e:
             logger.error(f"Error in Agent.run: {str(e)}")
             return "Sorry, I encountered an error. Please try again."
 
     def get_interaction_count(self) -> int:
+
         """Returns the total number of successful interactions."""
         return self.interaction_count
 

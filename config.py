@@ -1,5 +1,11 @@
 import os
+import warnings
 from dotenv import load_dotenv
+
+# Forcefully suppress all library warnings (like the duckduckgo-search notice)
+# globally before any other modules are imported.
+os.environ["PYTHONWARNINGS"] = "ignore"
+warnings.filterwarnings("ignore")
 
 # Load environment variables from .env file
 load_dotenv()
@@ -15,4 +21,7 @@ MODEL_NAME = "llama-3.1-8b-instant"
 TEMPERATURE = 0.1
 
 # Path Configuration
-BASE_PATH = r"C:\Users\HP"
+# Automatically detects the user's home directory (Windows: C:\Users\Name, Linux/Mac: /home/name)
+# Can be overridden by setting NEXAGENT_BASE_PATH in the .env file
+BASE_PATH = os.getenv("NEXAGENT_BASE_PATH", os.path.expanduser("~"))
+

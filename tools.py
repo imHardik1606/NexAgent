@@ -1,6 +1,14 @@
 import os
 import subprocess
-from duckduckgo_search import DDGS
+import warnings
+import re
+
+# Suppress library warnings (like the renaming notice) to keep terminal output clean
+# We do this BEFORE importing the library that triggers it
+warnings.filterwarnings("ignore", message=".*renamed to `ddgs`.*")
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+from ddgs import DDGS
 from config import BASE_PATH
 
 def resolve_path(path: str) -> str:
@@ -90,9 +98,14 @@ def create_folder(name: str) -> str:
     except Exception as e:
         return f"Error creating folder: {str(e)}"
 
+def strip_ansi(text: str) -> str:
+    """Removes ANSI escape sequences (colors, cursor movements) from a string."""
+    ansi_escape = re.compile(r'(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]')
+    return ansi_escape.sub('', text)
+
 def run_command(command: str) -> str:
     """
-    Runs a shell command and returns the output.
+    Runs a shell command and returns the clean text output.
     Blocks dangerous commands and has a 15-second timeout.
     """
     dangerous_commands = ["rm -rf /", "format c:", "del /f /s /q c:\\", "shutdown", "mkfs"]
@@ -101,32 +114,63 @@ def run_command(command: str) -> str:
         return "Error: Dangerous command blocked for safety."
         
     try:
+        # We specify encoding='utf-8' and errors='replace' to prevent crashes 
+        # when commands (like weather reports) return non-standard characters.
         result = subprocess.run(
             command, 
             shell=True, 
             capture_output=True, 
             text=True, 
+            encoding='utf-8',
+            errors='replace',
             timeout=15
         )
         
-        output = result.stdout.strip() if result.stdout else result.stderr.strip()
-        if not output:
+        raw_output = result.stdout.strip() if result.stdout else result.stderr.strip()
+        if not raw_output:
             return "Command completed with no output"
-        return output
+            
+        # Strip ANSI escape codes to prevent terminal corruption/glitches
+        return strip_ansi(raw_output)
         
     except subprocess.TimeoutExpired:
         return "Error: Command timed out after 15 seconds"
     except Exception as e:
         return f"Error running command: {str(e)}"
 
-def search_web(query: str) -> str:
+def get_weather(location: str) -> str:
     """
-    Searches the web using DuckDuckGo and returns the top 4 results.
+    Fetches the current weather for a specific location using wttr.in.
+    Returns a clean, summarized weather report.
     """
     try:
-        with DDGS() as ddgs:
-            results = list(ddgs.text(query, max_results=4))
-            
+        # Use v2 for a cleaner, more readable format
+        url = f"https://wttr.in/{location}?format=%l:+%C+%t+(Feels+like+%f)+|+Wind:+%w+|+Humidity:+%h"
+        result = subprocess.run(
+            ["curl", "-s", url], 
+            capture_output=True, 
+            text=True, 
+            encoding='utf-8',
+            errors='replace'
+        )
+        output = result.stdout.strip()
+        if not output or "weather data source" in output.lower():
+            return f"Could not find weather for '{location}'. Please try a web search instead."
+        return f"Weather Report: {output}"
+    except Exception as e:
+        return f"Error fetching weather: {str(e)}"
+
+def search_web(query: str) -> str:
+    """
+    Searches the web using DuckDuckGo and returns the top 8 results.
+    """
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            with DDGS() as ddgs:
+                # Increased to 8 results to bypass irrelevant/blocked links
+                results = list(ddgs.text(query, max_results=8))
+
         if not results:
             return "No results found"
             
@@ -139,6 +183,7 @@ def search_web(query: str) -> str:
         return "\n".join(output).strip()
     except Exception as e:
         return f"Error searching web: {str(e)}"
+
 
 # Tool Definitions for LLM Integration
 TOOL_DEFINITIONS = [
@@ -234,8 +279,25 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "get_weather",
+            "description": "Fetches the current weather for a specific location (city, state, etc.) using a dedicated weather service.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The city or location to get the weather for."
+                    }
+                },
+                "required": ["location"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "search_web",
-            "description": "Searches the web using DuckDuckGo and returns the top 4 results.",
+            "description": "Searches the web using DuckDuckGo and returns the top 8 results. Use this if get_weather fails or for general info.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -257,8 +319,10 @@ AVAILABLE_FUNCTIONS = {
     "list_files": list_files,
     "create_folder": create_folder,
     "run_command": run_command,
-    "search_web": search_web
+    "search_web": search_web,
+    "get_weather": get_weather
 }
+
 
 if __name__ == "__main__":
     print("--- Running Tools Tests ---")

@@ -8,18 +8,35 @@ if not os.path.exists(log_dir):
 
 log_file = os.path.join(log_dir, "agent.log")
 
-# Configure logging with basicConfig
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s | %(levelname)s | %(message)s',
-    handlers=[
-        logging.FileHandler(log_file, encoding='utf-8'),
-        logging.StreamHandler()
-    ]
-)
-
-# Create and export the logger object
+# Configure logging
 logger = logging.getLogger("nexagent")
+logger.setLevel(logging.DEBUG)  # Capture everything for the file
+
+# 1. File Handler: Detailed logging with timestamps
+file_handler = logging.FileHandler(log_file, encoding='utf-8')
+file_formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
+file_handler.setFormatter(file_formatter)
+file_handler.setLevel(logging.DEBUG) # Save debug info to file
+
+# 2. Console Handler: Clean output (only INFO and above)
+console_handler = logging.StreamHandler()
+console_formatter = logging.Formatter('%(message)s')
+console_handler.setFormatter(console_formatter)
+console_handler.setLevel(logging.INFO) # Hide debug info from console
+
+
+# Add handlers to logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+# Suppress noisy logs from external libraries (HTTP requests, etc.)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("groq").setLevel(logging.WARNING)
+logging.getLogger("duckduckgo_search").setLevel(logging.WARNING)
+
+# Create and export the logger object (legacy support for variable name)
+# logger already defined above
+
 
 def log_session_start():
     """Logs a visually distinct header at the start of a session."""

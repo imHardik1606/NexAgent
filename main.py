@@ -57,9 +57,9 @@ def main():
                 continue
             
             # g. General query
-            click.echo("\nThinking...\n")
             response = agent.run(user_input)
             click.echo(f"NexAgent: {response}\n")
+
 
         except KeyboardInterrupt:
             # h. Wrap in try/except KeyboardInterrupt

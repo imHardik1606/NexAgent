@@ -13,3 +13,6 @@ if not GROQ_API_KEY or GROQ_API_KEY == "your_key_here":
 # Model Parameters
 MODEL_NAME = "llama-3.1-8b-instant"
 TEMPERATURE = 0.1
+
+# Path Configuration
+BASE_PATH = r"C:\Users\HP"

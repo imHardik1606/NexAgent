@@ -1,6 +1,6 @@
 import json
 from groq import Groq
-from config import GROQ_API_KEY, MODEL_NAME, TEMPERATURE
+from config import GROQ_API_KEY, MODEL_NAME, TEMPERATURE, BASE_PATH
 from tools import TOOL_DEFINITIONS, AVAILABLE_FUNCTIONS
 from logger import logger
 
@@ -13,7 +13,7 @@ class Agent:
         self.history = [
             {
                 "role": "system",
-                "content": "You are NexAgent, a helpful AI assistant with tools to interact with the filesystem and internet. When asked to do something requiring a tool, use it. Be concise. Always confirm what action you took."
+                "content": f"You are NexAgent, a helpful AI assistant with tools to interact with the filesystem and internet. Your base user directory is {BASE_PATH}. When users mention 'Desktop', 'Documents', or relative paths, refer to this base directory. When asked to do something requiring a tool, use it. Be concise. Always confirm what action you took."
             }
         ]
         self.interaction_count = 0

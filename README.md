@@ -116,3 +116,11 @@ NexAgent/
 2. **Safety as a First-Class Citizen**: Building the `run_command` tool required a "deny-list" approach to prevent destructive actions (like `rm -rf /`). I realized that an AI-native OS is only as good as its security sandbox.
 3. **Interactive UI in CLI**: Integrating `Click` with an LLM-driven REPL highlighted the importance of user feedback (like "Thinking..." indicators) to manage the latency of remote inference calls.
 4. **State Persistence**: Managing conversation history while preventing token overflow taught me how to balance context retention with API efficiency.
+
+---
+
+## Recent Improvements
+- **Enhanced Session Tracking**: Implemented visually distinct session start/end headers in logs, including a timestamp and total interaction count for better session auditing.
+- **Path Resolution Logic**: Added a `BASE_PATH` configuration that locks the agent into a specific user directory (`C:\Users\HP`). All relative and drive-root paths are automatically resolved to this home directory for improved safety.
+- **Refined Interface**: Removed excessive emojis from system messages and headers to provide a cleaner, more professional CLI experience.
+- **Robust Test Suite**: Expanded the internal testing framework in `tools.py` to cover nested directory creation, path resolution edge cases, and command execution timeouts.

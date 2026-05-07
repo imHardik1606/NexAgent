@@ -21,7 +21,15 @@ def main():
     # 2. Create the agent instance
     try:
         agent = Agent()
+        # Personalize greeting based on memory
+        user_name = agent.memory.get("user_name", "")
+        if user_name:
+            click.echo(f"NexAgent Initialized. Welcome back, {user_name}!")
+        else:
+            click.echo("NexAgent Initialized")
     except Exception as e:
+
+
         logger.error(f"Critical initialization error: {str(e)}")
         click.echo(f"Error initializing Agent. Please check your .env and config. ({e})")
         return

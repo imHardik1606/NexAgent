@@ -1,7 +1,7 @@
 import json
 from groq import Groq
 from config import GROQ_API_KEY, MODEL_NAME, TEMPERATURE, BASE_PATH
-from tools import TOOL_DEFINITIONS, AVAILABLE_FUNCTIONS
+from tools import TOOL_DEFINITIONS, AVAILABLE_FUNCTIONS, load_memory
 from logger import logger
 
 class Agent:
@@ -10,6 +10,11 @@ class Agent:
         Initializes the Groq client and the conversation history with a system message.
         """
         self.client = Groq(api_key=GROQ_API_KEY)
+        
+        # Load long-term memory
+        self.memory = load_memory()
+        memory_context = f"\nLONG-TERM MEMORY: {json.dumps(self.memory)}" if self.memory else ""
+
         self.history = [
             {
                 "role": "system",
@@ -17,6 +22,7 @@ class Agent:
                     "You are NexAgent, a professional and high-end AI assistant. "
                     f"Your base user directory is {BASE_PATH}. "
                     "You have access to tools for filesystem operations and web searching. "
+                    f"{memory_context}\n"
                     "GUIDELINES:\n"
                     "1. Always identify yourself clearly as NexAgent.\n"
                     "2. Use tools whenever needed to provide accurate info.\n"
@@ -29,9 +35,10 @@ class Agent:
             }
         ]
         self.interaction_count = 0
-        logger.info("Agent initialized")
+        logger.debug("Agent initialized")
 
     def run(self, user_input: str) -> str:
+
         """
         Handles the interaction cycle, supporting multiple tool calls in sequence.
         """

@@ -8,8 +8,38 @@ import re
 warnings.filterwarnings("ignore", message=".*renamed to `ddgs`.*")
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
+import json
 from ddgs import DDGS
-from config import BASE_PATH
+from config import BASE_PATH, MEMORY_PATH
+
+def load_memory() -> dict:
+    """Loads long-term memory from the JSON file. Returns empty dict if file missing or corrupt."""
+    if not os.path.exists(MEMORY_PATH):
+        return {}
+    try:
+        with open(MEMORY_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def update_memory(key: str, value: str) -> str:
+    """
+    Updates or adds a piece of information to the persistent memory.
+    Use this to remember facts about the user (e.g., name, preferences).
+    """
+    try:
+        memory = load_memory()
+        memory[key] = value
+        
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(MEMORY_PATH), exist_ok=True)
+        
+        with open(MEMORY_PATH, 'w', encoding='utf-8') as f:
+            json.dump(memory, f, indent=4)
+        return f"Success: Remembered '{key}': '{value}'"
+    except Exception as e:
+        return f"Error updating memory: {str(e)}"
+
 
 def resolve_path(path: str) -> str:
     """
@@ -296,7 +326,29 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "update_memory",
+            "description": "Saves a piece of information to the user's persistent long-term memory. Use this to remember names, preferences, or important facts told by the user.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "The name of the fact to remember (e.g., 'user_name', 'favorite_color')."
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "The information to store."
+                    }
+                },
+                "required": ["key", "value"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "search_web",
+
             "description": "Searches the web using DuckDuckGo and returns the top 8 results. Use this if get_weather fails or for general info.",
             "parameters": {
                 "type": "object",
@@ -320,8 +372,10 @@ AVAILABLE_FUNCTIONS = {
     "create_folder": create_folder,
     "run_command": run_command,
     "search_web": search_web,
-    "get_weather": get_weather
+    "get_weather": get_weather,
+    "update_memory": update_memory
 }
+
 
 
 if __name__ == "__main__":

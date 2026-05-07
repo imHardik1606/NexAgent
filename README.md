@@ -12,7 +12,9 @@ NexAgent is equipped with six core tools that enable it to manage your environme
 - **`write_file`**: Generate or update documents, scripts, or logs.
 - **`create_folder`**: Organize project structures on the fly.
 - **`run_command`**: Execute arbitrary shell commands (with safety filtering).
+- **`get_weather`**: Dedicated weather service for fast, accurate local reports.
 - **`search_web`**: Retrieve real-time information from the internet via DuckDuckGo.
+- **`update_memory`**: **[NEW]** Proactively save user facts and preferences to long-term storage.
 
 ## Tech Stack
 | Technology | Purpose |
@@ -20,7 +22,7 @@ NexAgent is equipped with six core tools that enable it to manage your environme
 | **Python 3.11** | Core logic and tool implementation |
 | **Groq (Llama 3.1 8B)** | High-speed LLM reasoning and function calling |
 | **Click** | Robust CLI argument parsing and interactive REPL |
-| **Docker** | Containerization for consistent environments |
+| **JSON Storage** | Persistent Long-Term Memory (LTM) engine |
 | **DuckDuckGo API** | Live web search integration |
 | **Logging** | Production-grade UTF-8 session tracking |
 
@@ -29,14 +31,22 @@ NexAgent is equipped with six core tools that enable it to manage your environme
       +-------------+        +-------------+        +-----------------+
       |    User     | <----> |     CLI     | <----> |      Agent      |
       | (English)   |        |  (main.py)  |        |    (agent.py)   |
-      +-------------+        +-------------+        +--------+--------+
-                                                             |
-                                           +-----------------+-----------------+
-                                           |                                   |
-                                   +-------v-------+                   +-------v-------+
-                                   |  LLM (Groq)   |                   |  Local Tools  |
-                                   | (Reasoning)   |                   |  (tools.py)   |
-                                   +---------------+                   +---------------+
+      +-------------+        +--------+--------+
+                                      |
+                                      v
+                               +------+--------+
+                               |  LLM (Groq)   |
+                               | (Reasoning)   |
+                               +------+--------+
+                                      |
+                               +------+--------+
+                               |  Local Tools  |
+                               |  (tools.py)   |
+                               +------+--------+
+                                      |
+                               +------+--------+
+                               | Memory (JSON) |
+                               +---------------+
 ```
 
 ### Application Flow

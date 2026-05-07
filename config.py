@@ -25,3 +25,7 @@ TEMPERATURE = 0.1
 # Can be overridden by setting NEXAGENT_BASE_PATH in the .env file
 BASE_PATH = os.getenv("NEXAGENT_BASE_PATH", os.path.expanduser("~"))
 
+# Memory Path: Persistent data stored in a hidden folder in the user's home directory
+MEMORY_PATH = os.path.join(BASE_PATH, ".nexagent", "memory.json")
+
+

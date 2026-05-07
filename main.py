@@ -10,7 +10,7 @@ def main():
     """
     # 1. Print welcome banner
     click.echo("================================================")
-    click.echo("      NexAgent — AI-Powered OS Assistant      ")
+    click.echo("      NexAgent - AI-Powered OS Assistant      ")
     click.echo("================================================")
     click.echo("Commands: type anything in plain English")
     click.echo("Special:  'clear' resets conversation")

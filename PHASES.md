@@ -14,7 +14,7 @@ from plain English commands using LLM tool use.
 
 ## Phase 1: Project Setup and Environment
 **Aim:** Establish project structure and verify LLM connectivity
-**Status:** ✅ Complete
+**Status:** Done
 **What I did:**
 - Created the project scaffold including `main.py`, `agent.py`, `tools.py`, `config.py`, and `logger.py`.
 - Set up a Python virtual environment and initialized `requirements.txt` with core dependencies.
@@ -30,7 +30,7 @@ from plain English commands using LLM tool use.
 
 ## Phase 2: Core Tool Functions
 **Aim:** Build all OS-level tools the agent will use
-**Status:** ✅ Complete
+**Status:** Done
 **What I did:**
 - Implemented file system tools: `read_file`, `write_file`, `list_files`, and `create_folder` with robust error handling.
 - Added system automation tool: `run_command` with a 15s timeout and safety filters for dangerous operations.
@@ -46,7 +46,7 @@ from plain English commands using LLM tool use.
 
 ## Phase 3: Agent Logic
 **Aim:** Build the brain that connects LLM to tools
-**Status:** ✅ Complete
+**Status:** Done
 **What I did:**
 - Developed the `Agent` class in `agent.py` using the Groq SDK for high-speed inference.
 - Implemented recursive tool-calling logic that enables the LLM to execute local functions.
@@ -61,7 +61,7 @@ from plain English commands using LLM tool use.
 
 ## Phase 4: CLI Interface
 **Aim:** Build clean terminal interface for user interaction
-**Status:** ✅ Complete
+**Status:** Done
 **What I did:**
 - Developed a professional CLI entry point in `main.py` using the Click library.
 - Created an interactive REPL with custom command prompts and thinking indicators.
@@ -76,7 +76,7 @@ from plain English commands using LLM tool use.
 
 ## Phase 5: Enhanced Logging
 **Aim:** Add production-grade logging and session tracking
-**Status:** ✅ Complete
+**Status:** Done
 **What I did:**
 - Built a centralized `logger.py` module with both `FileHandler` and `StreamHandler`.
 - Configured automated directory creation for `logs/` and UTF-8 encoding support.
@@ -92,7 +92,7 @@ from plain English commands using LLM tool use.
 
 ## Phase 6: Dockerization & Documentation
 **Aim:** Containerize the application and finalize documentation
-**Status:** ✅ Complete
+**Status:** Done
 **What I did:**
 - Created an optimized `Dockerfile` using `python:3.11-slim` with layer caching for dependencies.
 - Implemented a `.dockerignore` file to keep the image slim and secure (excluding `.env`, `logs/`, etc.).

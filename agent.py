@@ -3,6 +3,7 @@ from groq import Groq
 from config import GROQ_API_KEY, MODEL_NAME, TEMPERATURE, BASE_PATH
 from tools import TOOL_DEFINITIONS, AVAILABLE_FUNCTIONS, load_memory
 from logger import logger
+from traceroot import observe, update_current_span
 
 class Agent:
     def __init__(self):
@@ -37,6 +38,8 @@ class Agent:
         self.interaction_count = 0
         logger.debug("Agent initialized")
 
+
+    @observe(name="NexAgent Interaction", type="agent")
     def run(self, user_input: str) -> str:
 
         """
@@ -54,6 +57,17 @@ class Agent:
                     tools=TOOL_DEFINITIONS,
                     tool_choice="auto",
                     temperature=TEMPERATURE
+                )
+
+                # Record the LLM interaction details in the trace
+                update_current_span(
+                    model=MODEL_NAME,
+                    model_parameters={"temperature": TEMPERATURE},
+                    usage={
+                        "input_tokens": response.usage.prompt_tokens,
+                        "output_tokens": response.usage.completion_tokens
+                    },
+                    prompt=self.history
                 )
 
                 message = response.choices[0].message

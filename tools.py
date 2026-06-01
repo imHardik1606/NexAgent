@@ -11,6 +11,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 import json
 from ddgs import DDGS
 from config import BASE_PATH, MEMORY_PATH
+from traceroot import observe
 
 def load_memory() -> dict:
     """Loads long-term memory from the JSON file. Returns empty dict if file missing or corrupt."""
@@ -22,6 +23,7 @@ def load_memory() -> dict:
     except Exception:
         return {}
 
+@observe(name="update_memory", type="tool")
 def update_memory(key: str, value: str) -> str:
     """
     Updates or adds a piece of information to the persistent memory.
@@ -54,6 +56,7 @@ def resolve_path(path: str) -> str:
         return os.path.join(BASE_PATH, clean_path)
     return path
 
+@observe(name="read_file", type="tool")
 def read_file(path: str) -> str:
     """
     Reads the content of a file and returns it as a string.
@@ -72,6 +75,7 @@ def read_file(path: str) -> str:
     except Exception as e:
         return f"Error reading file: {str(e)}"
 
+@observe(name="write_file", type="tool")
 def write_file(path: str, content: str) -> str:
     """
     Writes content to a file, creating parent directories if they don't exist.
@@ -90,6 +94,7 @@ def write_file(path: str, content: str) -> str:
     except Exception as e:
         return f"Error writing file: {str(e)}"
 
+@observe(name="list_files", type="tool")
 def list_files(directory: str = ".") -> str:
     """
     Lists the contents of a directory, differentiating folders and files with icons.
@@ -116,6 +121,7 @@ def list_files(directory: str = ".") -> str:
     except Exception as e:
         return f"Error listing directory: {str(e)}"
 
+@observe(name="create_folder", type="tool")
 def create_folder(name: str) -> str:
     """
     Creates a folder with the given name, including parent directories if necessary.
@@ -133,6 +139,7 @@ def strip_ansi(text: str) -> str:
     ansi_escape = re.compile(r'(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]')
     return ansi_escape.sub('', text)
 
+@observe(name="run_command", type="tool")
 def run_command(command: str) -> str:
     """
     Runs a shell command and returns the clean text output.
@@ -168,6 +175,7 @@ def run_command(command: str) -> str:
     except Exception as e:
         return f"Error running command: {str(e)}"
 
+@observe(name="get_weather", type="tool")
 def get_weather(location: str) -> str:
     """
     Fetches the current weather for a specific location using wttr.in.
@@ -190,6 +198,7 @@ def get_weather(location: str) -> str:
     except Exception as e:
         return f"Error fetching weather: {str(e)}"
 
+@observe(name="search_web", type="tool")
 def search_web(query: str) -> str:
     """
     Searches the web using DuckDuckGo and returns the top 8 results.

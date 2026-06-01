@@ -2,6 +2,11 @@ import click
 import sys
 from agent import Agent
 from logger import logger, log_session_start, log_session_end
+import traceroot
+from traceroot import Integration, using_attributes
+import uuid
+
+traceroot.initialize()
 
 @click.command()
 def main():
@@ -37,49 +42,51 @@ def main():
     # 3. Start session logging
     log_session_start()
 
+    session_id = str(uuid.uuid4())
+
     # 4. Interactive loop
-    while True:
-        try:
-            # a/b. Get user input and strip whitespace
-            user_input = input("You: ").strip()
-            
-            # c. Skip if empty
-            if not user_input:
-                continue
-            
-            # d. Handle 'exit'
-            if user_input.lower() == 'exit':
-                click.echo("Goodbye!")
+    with using_attributes(session_id=session_id):
+        while True:
+            try:
+                # a/b. Get user input and strip whitespace
+                user_input = input("You: ").strip()
+                
+                # c. Skip if empty
+                if not user_input:
+                    continue
+                
+                # d. Handle 'exit'
+                if user_input.lower() == 'exit':
+                    click.echo("Goodbye!")
+                    log_session_end(agent.get_interaction_count())
+                    sys.exit(0)
+                
+                # e. Handle 'clear'
+                if user_input.lower() == 'clear':
+                    agent.clear_history()
+                    click.echo("Conversation cleared.\n")
+                    continue
+                
+                # f. Handle 'history'
+                if user_input.lower() == 'history':
+                    click.echo(f"Messages in history: {len(agent.history)}\n")
+                    continue
+                
+                # g. General query
+                response = agent.run(user_input)
+                click.echo(f"NexAgent: {response}\n")
+
+            except KeyboardInterrupt:
+                # h. Wrap in try/except KeyboardInterrupt
+                click.echo("\nGoodbye!")
                 log_session_end(agent.get_interaction_count())
                 sys.exit(0)
             
-            # e. Handle 'clear'
-            if user_input.lower() == 'clear':
-                agent.clear_history()
-                click.echo("Conversation cleared.\n")
+            except Exception as e:
+                # i. Catch all other errors
+                logger.error(f"Error in main loop: {str(e)}")
+                click.echo(f"Error: {e}\n")
                 continue
-            
-            # f. Handle 'history'
-            if user_input.lower() == 'history':
-                click.echo(f"Messages in history: {len(agent.history)}\n")
-                continue
-            
-            # g. General query
-            response = agent.run(user_input)
-            click.echo(f"NexAgent: {response}\n")
-
-
-        except KeyboardInterrupt:
-            # h. Wrap in try/except KeyboardInterrupt
-            click.echo("\nGoodbye!")
-            log_session_end(agent.get_interaction_count())
-            sys.exit(0)
-        
-        except Exception as e:
-            # i. Catch all other errors
-            logger.error(f"Error in main loop: {str(e)}")
-            click.echo(f"Error: {e}\n")
-            continue
 
 if __name__ == "__main__":
     main()

@@ -6,7 +6,7 @@ import traceroot
 from traceroot import Integration, using_attributes
 import uuid
 
-traceroot.initialize()
+traceroot.initialize(integrations=[Integration.GROQ])
 
 @click.command()
 def main():

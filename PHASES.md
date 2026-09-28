@@ -6,7 +6,7 @@ from plain English commands using LLM tool use.
 
 ## Tech Stack
 - Python 3.11
-- Groq API (Llama 3.1 8B)
+- Groq API (`openai/gpt-oss-20b`)
 - DuckDuckGo Search
 - Docker
 
@@ -102,4 +102,4 @@ from plain English commands using LLM tool use.
 **What I learned:**
 - Optimizing Docker images for Python applications using slim bases and layer caching.
 - Securely passing secrets to containers using environment files instead of baking them in.
-- Managing persistent storage for logs across container restarts using Docker volumes.
+- Managing persistent storage for logs across container restarts using Docker volumes.

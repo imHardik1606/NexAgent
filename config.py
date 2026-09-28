@@ -11,14 +11,21 @@ warnings.filterwarnings("ignore")
 load_dotenv()
 
 # API Configuration
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
-if not GROQ_API_KEY or GROQ_API_KEY == "your_key_here":
-    raise ValueError("GROQ_API_KEY not found in .env file. Please add your actual Groq API key.")
-
-# Model Parameters
-MODEL_NAME = "llama-3.1-8b-instant"
-TEMPERATURE = 0.1
+# Model and evaluation parameters. Prices intentionally remain user-supplied.
+ROUTING_MODE = os.getenv("ROUTING_MODE", "all_cloud")
+LOCAL_MODEL = os.getenv("LOCAL_MODEL", "llama3.2:3b")
+CLOUD_MODEL = os.getenv("CLOUD_MODEL", "openai/gpt-oss-20b")
+MODEL_NAME = CLOUD_MODEL
+ESCALATE_TOOLS = {
+    name.strip() for name in os.getenv("ESCALATE_TOOLS", "run_command,write_file").split(",") if name.strip()
+}
+TEMPERATURE = float(os.getenv("TEMPERATURE", "0.0"))
+MAX_STEPS = int(os.getenv("MAX_STEPS", "8"))
+SHELL_TIMEOUT_S = float(os.getenv("SHELL_TIMEOUT_S", "15"))
+CLOUD_PRICE_PER_M_INPUT = float(os.getenv("CLOUD_PRICE_PER_M_INPUT", "0.0"))  # TODO: fill from Groq pricing.
+CLOUD_PRICE_PER_M_OUTPUT = float(os.getenv("CLOUD_PRICE_PER_M_OUTPUT", "0.0"))  # TODO: fill from Groq pricing.
 
 # Path Configuration
 # Automatically detects the user's home directory (Windows: C:\Users\Name, Linux/Mac: /home/name)

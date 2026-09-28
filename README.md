@@ -1,6 +1,6 @@
 # NexAgent — AI-Powered OS Assistant
 
-NexAgent is a CLI-based AI agent that bridges natural language and OS-level execution. By leveraging Llama 3.1 via the Groq API, it interprets complex user intent and safely executes local file system operations, shell commands, and web searches.
+NexAgent is a CLI-based AI agent that bridges natural language and OS-level execution. By leveraging `openai/gpt-oss-20b` via the Groq API, it interprets complex user intent and safely executes local file system operations, shell commands, and web searches.
 
 ## Why I Built This
 I built NexAgent to explore the transition from traditional CLIs to **AI-native operating environments**. Instead of memorizing syntax, users interact with their system through high-level intent. This project demonstrates how an LLM can act as a reasoning engine for an OS, chaining multiple tools to solve non-trivial automation tasks while maintaining safety and auditability.
@@ -20,7 +20,7 @@ NexAgent is equipped with six core tools that enable it to manage your environme
 | Technology | Purpose |
 | :--- | :--- |
 | **Python 3.11** | Core logic and tool implementation |
-| **Groq (Llama 3.1 8B)** | High-speed LLM reasoning and function calling |
+| **Groq (`openai/gpt-oss-20b`)** | High-speed LLM reasoning and function calling |
 | **Click** | Robust CLI argument parsing and interactive REPL |
 | **JSON Storage** | Persistent Long-Term Memory (LTM) engine |
 | **DuckDuckGo API** | Live web search integration |
@@ -92,6 +92,24 @@ graph TD
 ```bash
 python main.py
 ```
+
+### Reproducible evaluation
+
+Install Ollama, then pull the default local model:
+
+```bash
+ollama pull llama3.2:3b
+```
+
+Run the four smoke tasks once in each mode:
+
+```bash
+python -m eval.run --mode all_cloud --repeats 1 --smoke
+python -m eval.run --mode all_local --repeats 1 --smoke
+python -m eval.run --mode routed --repeats 1 --smoke
+```
+
+Evaluation runs reset `sandbox/` for every task, isolate memory, disable web search, enforce the configured step and shell limits, and append telemetry to `results/calls.csv` and `results/runs.csv`. Cloud prices are intentionally left as TODO configuration values until filled from Groq's pricing page.
 
 ### Running with Docker
 ```bash

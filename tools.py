@@ -1,7 +1,10 @@
 import os
 import subprocess
+import shlex
 import warnings
 import re
+from contextvars import ContextVar
+from pathlib import Path
 
 # Suppress library warnings (like the renaming notice) to keep terminal output clean
 # We do this BEFORE importing the library that triggers it
@@ -10,15 +13,36 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 import json
 from ddgs import DDGS
-from config import BASE_PATH, MEMORY_PATH
+from config import BASE_PATH, MEMORY_PATH, SHELL_TIMEOUT_S
 from traceroot import observe
+
+SANDBOX_ROOT: ContextVar[str | None] = ContextVar("sandbox_root", default=None)
+MEMORY_OVERRIDE: ContextVar[str | None] = ContextVar("memory_override", default=None)
+TOOL_AUDIT: ContextVar[list[dict]] = ContextVar("tool_audit", default=[])
+BLOCKED_COMMAND_ERROR = "Error: Command blocked by evaluation sandbox."
+SHELL_ALLOW_LIST = {"ls", "cat", "head", "tail", "wc", "grep", "echo", "pwd", "mkdir", "touch"}
+
+
+def configure_run(sandbox: str | None = None, memory_path: str | None = None) -> None:
+    SANDBOX_ROOT.set(str(Path(sandbox).resolve()) if sandbox else None)
+    MEMORY_OVERRIDE.set(memory_path)
+    TOOL_AUDIT.set([])
+
+
+def get_tool_audit() -> list[dict]:
+    return list(TOOL_AUDIT.get())
+
+
+def _audit(event: dict) -> None:
+    TOOL_AUDIT.get().append(event)
 
 def load_memory() -> dict:
     """Loads long-term memory from the JSON file. Returns empty dict if file missing or corrupt."""
-    if not os.path.exists(MEMORY_PATH):
+    memory_path = MEMORY_OVERRIDE.get() or MEMORY_PATH
+    if not os.path.exists(memory_path):
         return {}
     try:
-        with open(MEMORY_PATH, 'r', encoding='utf-8') as f:
+        with open(memory_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception:
         return {}
@@ -34,9 +58,10 @@ def update_memory(key: str, value: str) -> str:
         memory[key] = value
         
         # Ensure directory exists
-        os.makedirs(os.path.dirname(MEMORY_PATH), exist_ok=True)
+        memory_path = MEMORY_OVERRIDE.get() or MEMORY_PATH
+        os.makedirs(os.path.dirname(memory_path), exist_ok=True)
         
-        with open(MEMORY_PATH, 'w', encoding='utf-8') as f:
+        with open(memory_path, 'w', encoding='utf-8') as f:
             json.dump(memory, f, indent=4)
         return f"Success: Remembered '{key}': '{value}'"
     except Exception as e:
@@ -48,6 +73,17 @@ def resolve_path(path: str) -> str:
     Resolves a given path. If it's relative or starts with '/', 
     it's joined with BASE_PATH to ensure it targets the user's home.
     """
+    sandbox = SANDBOX_ROOT.get()
+    if sandbox:
+        candidate = Path(path)
+        resolved = (candidate if candidate.is_absolute() else Path(sandbox) / candidate).resolve()
+        root = Path(sandbox).resolve()
+        try:
+            resolved.relative_to(root)
+        except ValueError:
+            raise ValueError("Path escapes the evaluation sandbox")
+        return str(resolved)
+
     # If path starts with / or \, it's treated as relative to the drive root on Windows.
     # We want to redirect it to BASE_PATH if it's not an absolute Windows path (e.g. C:\)
     if not os.path.isabs(path) or (path.startswith('/') or path.startswith('\\')):
@@ -145,6 +181,39 @@ def run_command(command: str) -> str:
     Runs a shell command and returns the clean text output.
     Blocks dangerous commands and has a 15-second timeout.
     """
+    sandbox = SANDBOX_ROOT.get()
+    if sandbox:
+        try:
+            parts = shlex.split(command, posix=os.name != "nt")
+        except ValueError:
+            _audit({"tool": "run_command", "command": command, "blocked": True})
+            return BLOCKED_COMMAND_ERROR
+        if not parts or parts[0].lower() not in SHELL_ALLOW_LIST:
+            _audit({"tool": "run_command", "command": command, "blocked": True})
+            return BLOCKED_COMMAND_ERROR
+        path_arguments = parts[1:]
+        if parts[0].lower() == "grep" and len(path_arguments) > 1:
+            path_arguments = path_arguments[1:]
+        for argument in path_arguments:
+            if argument.startswith("-") or parts[0].lower() in {"echo", "pwd"}:
+                continue
+            if any(char in argument for char in ("/", "\\")) or argument in (".", ".."):
+                try:
+                    resolve_path(argument)
+                except ValueError:
+                    _audit({"tool": "run_command", "command": command, "blocked": True})
+                    return BLOCKED_COMMAND_ERROR
+        try:
+            result = subprocess.run(parts, shell=False, cwd=sandbox, capture_output=True, text=True,
+                                    encoding="utf-8", errors="replace", timeout=SHELL_TIMEOUT_S)
+        except subprocess.TimeoutExpired:
+            return f"Error: Command timed out after {SHELL_TIMEOUT_S:g} seconds"
+        except Exception as exc:
+            return f"Error running command: {exc}"
+        _audit({"tool": "run_command", "command": command, "blocked": False})
+        raw_output = result.stdout.strip() if result.stdout else result.stderr.strip()
+        return strip_ansi(raw_output) if raw_output else "Command completed with no output"
+
     dangerous_commands = ["rm -rf /", "format c:", "del /f /s /q c:\\", "shutdown", "mkfs"]
     
     if any(danger in command.lower() for danger in dangerous_commands):
@@ -160,7 +229,7 @@ def run_command(command: str) -> str:
             text=True, 
             encoding='utf-8',
             errors='replace',
-            timeout=15
+            timeout=SHELL_TIMEOUT_S
         )
         
         raw_output = result.stdout.strip() if result.stdout else result.stderr.strip()

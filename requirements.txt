@@ -3,3 +3,5 @@ duckduckgo-search
 python-dotenv
 click
 traceroot
+ollama
+ddgs
